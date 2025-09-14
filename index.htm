@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atividade de Revisão do PL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(to bottom, #1e3a8a, #3b82f6);
+            touch-action: manipulation;
+            overflow: auto;
+        }
+        .option-button {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .option-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .option-button:active {
+            transform: scale(0.98);
+        }
+        #feedback {
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        }
+        .screen {
+            min-height: 100vh;
+            width: 100%;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center">
+
+    <!-- Tela de Login / Cadastro -->
+    <div id="login-screen" class="screen">
+        <div class="bg-white/70 p-6 sm:p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
+            <div id="login-form">
+                <h1 class="text-3xl sm:text-4xl font-bold text-sky-800">Acessar Jogo</h1>
+                <p class="text-lg text-sky-700 mt-4">Digite seu código e senha para entrar. Se for seu primeiro acesso, clique em "Não Tenho Cadastro".</p>
+                <input type="text" id="login-code" placeholder="Seu código (Ex.: 36123.16)" class="mt-8 w-full text-xl p-3 rounded-xl border-4 border-sky-300">
+                <input type="password" id="login-password" placeholder="Sua senha" class="mt-4 w-full text-xl p-3 rounded-xl border-4 border-sky-300">
+                <button id="login-button" class="mt-6 w-full bg-blue-500 text-white text-2xl font-bold py-3 rounded-xl shadow-lg hover:bg-blue-600 transition flex items-center justify-center">
+                    <span class="button-text">Entrar</span>
+                    <div class="loader hidden ml-3"></div>
+                </button>
+                <p id="login-message" class="text-red-500 mt-4 h-5"></p>
+                <div class="flex space-x-2 mt-2">
+                    <button id="go-to-register" class="w-1/2 text-sky-600 hover:underline">Não tenho cadastro</button>
+                    <button id="view-ranking-button" class="w-1/2 text-sky-600 hover:underline">Ver Ranking</button>
+                </div>
+            </div>
+            <div id="register-form" class="hidden">
+                <h1 class="text-3xl sm:text-4xl font-bold text-sky-800">Criar Cadastro</h1>
+                <p class="text-lg text-sky-700 mt-4">Preencha seus dados para criar um acesso.</p>
+                <input type="text" id="register-name" placeholder="Nome Completo" class="mt-8 w-full text-xl p-3 rounded-xl border-4 border-sky-300">
+                <select id="register-class" class="mt-4 w-full text-xl p-3 rounded-xl border-4 border-sky-300 bg-white">
+                    <option value="">Selecione sua turma</option>
+                    <option value="5º Ano A">5º Ano A</option>
+                    <option value="5º Ano B">5º Ano B</option>
+                </select>
+                <input type="text" id="register-code" placeholder="Código de acesso (Ex.: 36123.16)" class="mt-4 w-full text-xl p-3 rounded-xl border-4 border-sky-300">
+                <input type="password" id="register-password" placeholder="Crie uma senha" class="mt-4 w-full text-xl p-3 rounded-xl border-4 border-sky-300">
+                <button id="register-button" class="mt-6 w-full bg-green-500 text-white text-2xl font-bold py-3 rounded-xl shadow-lg hover:bg-green-600 transition flex items-center justify-center">
+                    <span class="button-text">Cadastrar e Entrar</span>
+                    <div class="loader hidden ml-3"></div>
+                </button>
+                <p id="register-message" class="text-red-500 mt-4 h-5"></p>
+                <button id="back-to-login" class="mt-2 text-sky-600 hover:underline">Já tenho cadastro</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela do Jogo (Quiz) -->
+    <div id="game-screen" class="screen hidden flex-col">
+        <header class="text-center mb-4 sm:mb-8 w-full max-w-4xl">
+            <div class="flex justify-end items-center w-full">
+                <div class="bg-white/50 rounded-full px-4 sm:px-6 py-2">
+                    <span class="text-xl sm:text-2xl font-semibold text-sky-800">Pontos: <span class="score-display">0</span>/25</span>
+                </div>
+            </div>
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white mt-4" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">
+                Atividade de Revisão do PL
+            </h1>
+             <p class="text-lg sm:text-xl text-white mt-2">Olá, <span id="player-firstname"></span>! Escolha a resposta certa.</p>
+        </header>
+        <main class="w-full bg-white/70 p-6 sm:p-8 rounded-2xl shadow-xl text-center max-w-4xl">
+            <div id="question-container" class="mb-6 sm:mb-8 text-xl sm:text-2xl md:text-3xl font-semibold text-sky-800 min-h-[6rem] flex items-center justify-center">
+                <!-- A pergunta aparecerá aqui -->
+            </div>
+            <div id="options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <!-- As opções aparecerão aqui -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Tela Final (Game Over) -->
+    <div id="end-screen" class="screen hidden">
+        <div class="bg-white/70 p-6 sm:p-8 rounded-2xl shadow-xl max-w-3xl w-full text-center my-8">
+            <div id="end-screen-content">
+                <h1 class="text-3xl sm:text-4xl font-bold text-sky-800">Fim de Jogo!</h1>
+                <p id="final-message" class="text-lg text-sky-800 mt-4 font-semibold"></p>
+                <div class="my-6 text-sky-700">
+                    <div class="text-xl"><strong>Pontuação Final:</strong> <span id="final-score">0</span>/25</div>
+                </div>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-bold text-sky-800 mt-6 mb-4">Ranking (Top 100)</h2>
+            <div class="overflow-y-auto h-64 bg-white/50 rounded-lg">
+                <table class="w-full text-left">
+                    <thead class="bg-sky-200 sticky top-0">
+                        <tr>
+                            <th class="p-2">#</th>
+                            <th class="p-2">Nome</th>
+                            <th class="p-2">Pontos</th>
+                            <th class="p-2">Turma</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ranking-body">
+                        <tr><td colspan="4" class="p-8 text-center"><div class="loader mx-auto"></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <button id="play-again-button" class="mt-8 w-full bg-yellow-500 text-white text-2xl sm:text-3xl font-bold py-3 rounded-xl shadow-lg hover:bg-yellow-600 transition">
+                Jogar Novamente
+            </button>
+            <button id="back-from-ranking-button" class="mt-8 w-full bg-gray-500 text-white text-2xl sm:text-3xl font-bold py-3 rounded-xl shadow-lg hover:bg-gray-600 transition hidden">
+                Voltar
+            </button>
+        </div>
+    </div>
+
+    <div id="feedback" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 sm:p-8 rounded-2xl text-white text-2xl font-bold shadow-2xl opacity-0 pointer-events-none w-11/12 max-w-sm text-center"></div>
+    
+    <script>
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvzdtou17UCu8lmOFg9fxVEaLg1FnWcvexCYUZzqNLcUhiE6mZW_OkxeeI874AXZRT/exec';
+        const NOME_DESTE_JOGO = "Atividade de Revisão do PL";
+
+        // --- ELEMENTOS DO DOM ---
+        const loginScreen = document.getElementById('login-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        const loginForm = document.getElementById('login-form');
+        const loginCodeInput = document.getElementById('login-code');
+        const loginPasswordInput = document.getElementById('login-password');
+        const loginButton = document.getElementById('login-button');
+        const loginMessage = document.getElementById('login-message');
+        const goToRegisterButton = document.getElementById('go-to-register');
+        const registerForm = document.getElementById('register-form');
+        const registerNameInput = document.getElementById('register-name');
+        const registerClassInput = document.getElementById('register-class');
+        const registerCodeInput = document.getElementById('register-code');
+        const registerPasswordInput = document.getElementById('register-password');
+        const registerButton = document.getElementById('register-button');
+        const registerMessage = document.getElementById('register-message');
+        const backToLoginButton = document.getElementById('back-to-login');
+        const playerFirstNameEl = document.getElementById('player-firstname');
+        const finalMessageEl = document.getElementById('final-message');
+        const viewRankingButton = document.getElementById('view-ranking-button');
+        const backFromRankingButton = document.getElementById('back-from-ranking-button');
+        const playAgainButton = document.getElementById('play-again-button');
+        const endScreenContent = document.getElementById('end-screen-content');
+        const questionContainer = document.getElementById('question-container');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackEl = document.getElementById('feedback');
+        
+        // --- ESTADO DO JOGO ---
+        let score = 0;
+        let startTime;
+        let loggedInUser = null;
+        let currentQuestionIndex = 0;
+        let shuffledQuestions = [];
+
+        // --- BANCO DE PERGUNTAS ---
+        const questions = [
+            { question: 'Qual é o nome da árvore que mora com o Pequeno Príncipe Preto em seu planeta?', options: ['Macieira', 'Iansã', 'Baobá', 'Xangô'], answer: 'Baobá', explanation: 'A resposta correta é Baobá.' },
+            { question: 'O que o Pequeno Príncipe Preto mais gosta de fazer por sua companheira de planeta?', options: ['Cantar para ela', 'Regá-la', 'Contar estrelas', 'Construir um trono'], answer: 'Regá-la', explanation: 'A resposta correta é Regá-la.' },
+            { question: 'Segundo o Pequeno Príncipe Preto, o que ele aprende com a Baobá?', options: ['A contar dinheiro', 'A dar ordens para os outros', 'A voar de pipa', 'Sabedoria e ancestralidade'], answer: 'Sabedoria e ancestralidade', explanation: 'A resposta correta é Sabedoria e ancestralidade.' },
+            { question: 'O Pequeno Príncipe Preto descreve seu cabelo dizendo que:', options: ['Ele é ruim e fala mal dos outros.', 'Ele está crescendo para cima, como os galhos da Baobá.', 'Ele é liso e comprido.', 'Ele deve ser sempre cortado bem baixinho.'], answer: 'Ele está crescendo para cima, como os galhos da Baobá.', explanation: 'A resposta correta é que ele está crescendo para cima, como os galhos da Baobá.' },
+            { question: 'Como o Pequeno Príncipe Preto viaja para outros planetas?', options: ['Usando um foguete', 'Agarrado a uma pipa quando venta forte.', 'Nadando pelo universo', 'Em um cavalo alado'], answer: 'Agarrado a uma pipa quando venta forte.', explanation: 'A resposta correta é agarrado a uma pipa quando venta forte.' },
+            { question: 'No segundo planeta que visita, o Pequeno Príncipe Preto encontra um rei que é:', options: ['Muito amigável e gosta de dividir tudo.', 'Solitário e gosta de dar ordens e contar estrelas.', 'Pobre e triste.', 'Um ótimo dançarino.'], answer: 'Solitário e gosta de dar ordens e contar estrelas.', explanation: 'A resposta correta é solitário e gosta de dar ordens e contar estrelas.' },
+            { question: 'O que o Pequeno Príncipe Preto planta no planeta do rei?', options: ['Uma roseira', 'Um pé de milho', 'Uma semente da Baobá.', 'Uma macieira'], answer: 'Uma semente da Baobá.', explanation: 'A resposta correta é uma semente da Baobá.' },
+            { question: 'No Planeta Terra, o Pequeno Príncipe Preto encontra uma raposa que diz que não pode brincar porque:', options: ['Está muito ocupada caçando galinhas.', 'Não gosta de meninos.', 'O príncipe ainda não a cativou.', 'Tem medo de altura.'], answer: 'O príncipe ainda não a cativou.', explanation: 'A resposta correta é que o príncipe ainda não a cativou.' },
+            { question: 'De acordo com a raposa, o que significa "cativar" alguém?', options: ['Prender alguém em uma jaula.', 'Criar um laço e ter necessidade um do outro.', 'Dar muitos presentes caros.', 'Ignorar a pessoa completamente.'], answer: 'Criar um laço e ter necessidade um do outro.', explanation: 'A resposta correta é criar um laço e ter necessidade um do outro.' },
+            { question: 'O Pequeno Príncipe Preto fica triste ao ver os adultos na Terra porque eles:', options: ['Dançavam o dia todo.', 'Não se falavam, não se olhavam e não largavam umas caixas iluminadas.', 'Brincavam mais que as crianças.', 'Distribuíam flores para todos.'], answer: 'Não se falavam, não se olhavam e não largavam umas caixas iluminadas.', explanation: 'A resposta correta é que não se falavam, não se olhavam e não largavam umas caixas iluminadas.' },
+            { question: 'As crianças que o Pequeno Príncipe Preto encontra na Terra riem dele por causa:', options: ['Do seu sorriso.', 'De seu sotaque e de suas roupas.', 'Da cor dos seus olhos.', 'Do seu nome.'], answer: 'De seu sotaque e de suas roupas.', explanation: 'A resposta correta é de seu sotaque e de suas roupas.' },
+            { question: 'O que as crianças da Terra tentam fazer sem pedir licença, deixando o Pequeno Príncipe Preto irritado?', options: ['Pegar sua pipa.', 'Tocar em seu cabelo.', 'Pegar suas sementes.', 'Sentar em seu lugar.'], answer: 'Tocar em seu cabelo.', explanation: 'A resposta correta é tocar em seu cabelo.' },
+            { question: 'Qual é a palavra que o Pequeno Príncipe Preto grita para ensinar as crianças a serem mais unidas?', options: ['AMIZADE!', 'ALEGRIA!', 'ANCESTRALIDADE!', 'UBUNTU!'], answer: 'UBUNTU!', explanation: 'A resposta correta é UBUNTU!.' },
+            { question: 'Qual o significado de UBUNTU que o Pequeno Príncipe Preto ensina?', options: ['"Salve-se quem puder"', '"Que vença o melhor"', '"Eu sou porque nós somos".', '"Cada um por si"'], answer: '"Eu sou porque nós somos".', explanation: 'A resposta correta é "Eu sou porque nós somos".' },
+            { question: 'Para ensinar sobre Ubuntu, o Pequeno Príncipe Preto propõe uma corrida com um cesto de:', options: ['Frutas', 'Balas.', 'Brinquedos', 'Livros'], answer: 'Balas.', explanation: 'A resposta correta são Balas.' },
+            { question: 'Ao voltar para casa, como o Pequeno Príncipe Preto encontra a Baobá?', options: ['Forte e cheia de flores.', 'Cantando uma canção de ninar.', 'Fraquinha e chorando.', 'Dormindo profundamente.'], answer: 'Fraquinha e chorando.', explanation: 'A resposta correta é fraquinha e chorando.' },
+            { question: 'O que a Baobá explica que acontecerá com ela?', options: ['Que ela viajaria com o príncipe na próxima vez.', 'Que ela um dia partiria para se tornar a ancestralidade dele.', 'Que ela viveria para sempre naquele planeta.', 'Que ela se transformaria em uma estrela.'], answer: 'Que ela um dia partiria para se tornar a ancestralidade dele.', explanation: 'A resposta correta é que ela um dia partiria para se tornar a ancestralidade dele.' },
+            { question: 'O que o Pequeno Príncipe Preto encontra no solo depois que a Baobá se foi?', options: ['Uma carta de despedida.', 'Uma flor que fede a carniça.', 'Uma muda de uma nova Baobá.', 'A pipa que o levou para a Terra.'], answer: 'Uma muda de uma nova Baobá.', explanation: 'A resposta correta é uma muda de uma nova Baobá.' },
+            { question: 'A raposa diz que se o príncipe a visitar às quatro da tarde, ela começará a ser feliz:', options: ['Exatamente às quatro horas.', 'Desde as três horas.', 'Apenas no dia seguinte.', 'Quando ele for embora.'], answer: 'Desde as três horas.', explanation: 'A resposta correta é desde as três horas.' },
+            { question: 'O que o Pequeno Príncipe Preto diz que a vida tem gosto?', options: ['De chocolate e café quentinho.', 'De frango à passarinho.', 'De suco de melancia com tangerina.', 'De goiabada com queijo.'], answer: 'De goiabada com queijo.', explanation: 'A resposta correta é de goiabada com queijo.' },
+            { question: 'Quem é o autor do livro "O Pequeno Príncipe Preto"?', options: ['Adalberto Neto', 'Juliana Barbosa Pereira', 'Rodrigo França', 'Nelson Rodrigues'], answer: 'Rodrigo França', explanation: 'A resposta correta é Rodrigo França.' },
+            { question: 'Quem fez as ilustrações do livro?', options: ['Rodrigo França', 'Daniele Cajueiro', 'Mariana Elia', 'Juliana Barbosa Pereira'], answer: 'Juliana Barbosa Pereira', explanation: 'A resposta correta é Juliana Barbosa Pereira.' },
+            { question: 'O Pequeno Príncipe diz que seu planeta, comparado à Terra, parece um:', options: ['Grão de areia.', 'Grão de feijão.', 'Pingo de chuva.', 'Raio de sol.'], answer: 'Grão de areia.', explanation: 'A resposta correta é grão de areia.' },
+            { question: 'O que o Príncipe quer espalhar por outros planetas junto com as sementes da Baobá?', options: ['A tristeza', 'O egoísmo', 'O Ubuntu', 'A riqueza'], answer: 'O Ubuntu', explanation: 'A resposta correta é O Ubuntu.' },
+            { question: 'Como é a flor que nasce na Baobá uma vez por ano?', options: ['Cheirosa e dura muitos dias.', 'Nasce de cabeça para baixo e fede a carniça.', 'É azul e brilha no escuro.', 'Não tem cheiro и é comestível.'], answer: 'Nasce de cabeça para baixo e fede a carniça.', explanation: 'A resposta correta é que nasce de cabeça para baixo e fede a carniça.' },
+            { question: 'O Pequeno Príncipe Preto associa a cor de sua pele a:', options: ['Noite sem estrelas.', 'Chocolate e café quentinho.', 'Mel e caramelo.', 'Madeira e folhas secas.'], answer: 'Chocolate e café quentinho.', explanation: 'A resposta correta é chocolate e café quentinho.' },
+            { question: 'Sobre o lápis "cor de pele", o que o Príncipe pensa?', options: ['Que só existe uma cor de pele.', 'Que a pele pode ter muitos tons diferentes.', 'Que a cor de pele correta é a rosa claro.', 'Que não se deve usar lápis de cor.'], answer: 'Que a pele pode ter muitos tons diferentes.', explanation: 'A resposta correta é que a pele pode ter muitos tons diferentes.' },
+            { question: 'O Pequeno Príncipe descreve seu nariz como um nariz de:', options: ['Palhaço', 'Tomate', 'Batata', 'Abacaxi'], answer: 'Batata', explanation: 'A resposta correta é batata.' },
+            { question: 'Na história que o Príncipe conta, os raios no céu são comparados a:', options: ['Estrelas cadentes.', 'Uma guerreira e um guerreiro (Iansã e Xangô) lutando.', 'Pássaros de fogo.', 'Lanternas mágicas.'], answer: 'Uma guerreira e um guerreiro (Iansã e Xangô) lutando.', explanation: 'A resposta correta é uma guerreira e um guerreiro (Iansã e Xangô) lutando.' },
+            { question: 'O que o rei do segundo planeta mais queria que o Pequeno Príncipe fizesse?', options: ['Cantasse para ele.', 'Contasse uma história.', 'O aplaudisse.', 'Limpasse seu planeta.'], answer: 'O aplaudisse.', explanation: 'A resposta correta é que o aplaudisse.' },
+            { question: 'O que o rei oferece ao Pequeno Príncipe para que ele fique em seu planeta?', options: ['Metade do seu manto.', 'Um cargo, como embaixador ou conselheiro.', 'Uma coroa de estrelas.', 'Um trono menor ao seu lado.'], answer: 'Um cargo, como embaixador ou conselheiro.', explanation: 'A resposta correta é um cargo, como embaixador ou conselheiro.' },
+            { question: 'Qual o sentimento que o Pequeno Príncipe Preto prefere ter em vez de estrelas?', options: ['Poder', 'Riqueza', 'Afeto', 'Fama'], answer: 'Afeto', explanation: 'A resposta correta é Afeto.' },
+            { question: 'Por que o Príncipe acha estranho o Planeta Terra se chamar "Terra"?', options: ['Porque ele é muito pequeno.', 'Porque tem mais água do que terra.', 'Porque ele é muito barulhento.', 'Porque não existem árvores.'], answer: 'Porque tem mais água do que terra.', explanation: 'A resposta correta é porque tem mais água do que terra.' },
+            { question: 'Onde a raposa estava escondida quando falou com o Príncipe pela primeira vez?', options: ['Dentro de uma toca.', 'Em cima de um galho.', 'Debaixo da macieira.', 'Atrás de uma pedra.'], answer: 'Debaixo da macieira.', explanation: 'A resposta correta é debaixo da macieira.' },
+            { question: 'A raposa descreve sua própria vida como:', options: ['Divertida', 'Agitada', 'Chata', 'Tranquila'], answer: 'Chata', explanation: 'A resposta correta é Chata.' },
+            { question: 'A raposa tem medo que os homens a transformem em:', options: ['Comida para outros animais.', 'Estátua de jardim.', 'Chapéu, churrasquinho ou casaco de madame.', 'Personagem de circo.'], answer: 'Chapéu, churrasquinho ou casaco de madame.', explanation: 'A resposta correta é chapéu, churrasquinho ou casaco de madame.' },
+            { question: 'A palavra "afeto", segundo a raposa, vem de:', options: ['Afastar o outro.', 'Afetar o outro.', 'Afeitar o outro.', 'Afogar o outro.'], answer: 'Afetar o outro.', explanation: 'A resposta correta é afetar o outro.' },
+            { question: 'Qual a recomendação da raposa para quando se cativa alguém?', options: ['Mentir sobre seus sentimentos.', 'Ser você mesmo e claro com o que sente.', 'Dar muitos presentes.', 'Falar o mínimo possível.'], answer: 'Ser você mesmo e claro com o que sente.', explanation: 'A resposta correta é ser você mesmo e claro com o que sente.' },
+            { question: 'O que o Príncipe pensou em fazer com a raposa e o rei?', options: ['Ignorá-los para sempre.', 'Juntá-los, para um afetar o outro.', 'Convidá-los para morar em seu planeta.', 'Escrever uma carta para cada um.'], answer: 'Juntá-los, para um afetar o outro.', explanation: 'A resposta correta é juntá-los, para um afetar o outro.' },
+            { question: 'O Pequeno Príncipe Preto discorda da raposa quando ela diz que ele é "como cem mil garotos", pois ele acredita que:', options: ['Ele é melhor que os outros.', 'Todos os garotos são iguais.', 'Cativando ou não, nós somos únicos.', 'Apenas príncipes são únicos.'], answer: 'Cativando ou não, nós somos únicos.', explanation: 'A resposta correta é que cativando ou não, nós somos únicos.' },
+            { question: 'As crianças na escola da Terra brincavam de forma:', options: ['Cooperativa e unida.', 'Competitiva e separada.', 'Silenciosa e calma.', 'Criativa e livre.'], answer: 'Competitiva e separada.', explanation: 'A resposta correta é competitiva e separada.' },
+            { question: 'O que um menino disse que faria se não fosse escolhido para o time?', options: ['Iria chorar para a professora.', 'Não emprestaria a bola.', 'Jogaria no time adversário.', 'Iria embora para casa.'], answer: 'Não emprestaria a bola.', explanation: 'A resposta correta é que não emprestaria a bola.' },
+            { question: 'O que as crianças da Terra responderam quando o Príncipe perguntou "Para onde vocês estão indo?"?', options: ['"Não é da sua conta!"', '"Para o parque!"', '"Para a escola!"', 'Elas não responderam.'], answer: '"Para a escola!"', explanation: 'A resposta correta é "Para a escola!".' },
+            { question: 'O que o Príncipe diz que as crianças podem ser quando crescerem?', options: ['Apenas príncipes e princesas.', 'Ricas e famosas.', 'Tudo o que quiserem: astronauta, professor, engenheira, etc.', 'Exatamente como os adultos que ele viu.'], answer: 'Tudo o que quiserem: astronauta, professor, engenheira, etc.', explanation: 'A resposta correta é tudo o que quiserem: astronauta, professor, engenheira, etc.' },
+            { question: 'Qual a última palavra que o Príncipe diz para as crianças da Terra?', options: ['"Adeus!"', '"Até logo!"', '"Modupé, obrigado!"', '"Ubuntu!"'], answer: '"Modupé, obrigado!"', explanation: 'A resposta correta é "Modupé, obrigado!".' },
+            { question: 'Ao voltar para seu planeta, o Príncipe pede a bênção para quem?', options: ['Para a lua.', 'Para as estrelas.', 'Para a Baobá.', 'Para seus ancestrais.'], answer: 'Para a Baobá.', explanation: 'A resposta correta é para a Baobá.' },
+            { question: 'Segundo a Baobá, para onde ela iria depois de partir?', options: ['Para o Planeta Terra.', 'Para o Sol.', 'Para o Orun, junto dos antepassados.', 'Para o planeta do rei.'], answer: 'Para o Orun, junto dos antepassados.', explanation: 'A resposta correta é para o Orun, junto dos antepassados.' },
+            { question: 'O que o Príncipe entende sobre quem a gente ama e vai embora?', options: ['Que a pessoa desaparece para sempre.', 'Que a pessoa vira uma estrela triste.', 'Que a pessoa vira um encantado e mora dentro da gente.', 'Que devemos esquecer a pessoa rapidamente.'], answer: 'Que a pessoa vira um encantado e mora dentro da gente.', explanation: 'A resposta correta é que a pessoa vira um encantado e mora dentro da gente.' },
+            { question: 'O que o Príncipe começa a fazer com a nova mudinha de Baobá?', options: ['Ignorá-la.', 'Colocá-la em um vaso.', 'Regá-la para que gerasse muitas sementes.', 'Escondê-la do sol.'], answer: 'Regá-la para que gerasse muitas sementes.', explanation: 'A resposta correta é regá-la para que gerasse muitas sementes.' },
+            { question: 'De onde surgiu a ideia para o livro "O Pequeno Príncipe Preto"?', options: ['De um sonho do autor.', 'De um filme antigo.', 'De um espetáculo de teatro com o mesmo nome.', 'De uma história que a avó dele inventou.'], answer: 'De um espetáculo de teatro com o mesmo nome.', explanation: 'A resposta correta é de um espetáculo de teatro com o mesmo nome.' },
+            { question: 'Qual era o objetivo da peça de teatro que deu origem ao livro?', options: ['Fazer as pessoas rirem.', 'Mostrar a potência da diversidade cultural do Brasil.', 'Contar a história da escravidão.', 'Ensinar as crianças a desenhar.'], answer: 'Mostrar a potência da diversidade cultural do Brasil.', explanation: 'A resposta correta é mostrar a potência da diversidade cultural do Brasil.' },
+            { question: 'Qual a principal mensagem que o autor quis passar no livro e na peça?', options: ['Que devemos viajar muito.', 'Que devemos ser ricos.', 'Que devemos amar quem realmente somos.', 'Que devemos ter muitos amigos.'], answer: 'Que devemos amar quem realmente somos.', explanation: 'A resposta correta é que devemos amar quem realmente somos.' },
+            { question: 'Além de escritor, Rodrigo França também é:', options: ['Músico e cantor.', 'Ator, diretor, dramaturgo e artista plástico.', 'Médico e engenheiro.', 'Cozinheiro e professor de matemática.'], answer: 'Ator, diretor, dramaturgo e artista plástico.', explanation: 'A resposta correta é ator, diretor, dramaturgo e artista plástico.' },
+            { question: 'Em qual categoria Rodrigo França ganhou o Prêmio Shell de Teatro em 2019?', options: ['Melhor Ator.', 'Melhor Diretor.', 'Inovação.', 'Melhor Texto.'], answer: 'Inovação.', explanation: 'A resposta correta é Inovação.' },
+            { question: 'O que a ilustradora Juliana Barbosa Pereira fez para criar os desenhos do livro?', options: ['Copiou desenhos de outros livros.', 'Viajou para a África em busca de inspiração.', 'Entrou em contato com a criança que vive dentro dela.', 'Usou apenas o computador para criar tudo.'], answer: 'Entrou em contato com a criança que vive dentro dela.', explanation: 'A resposta correta é que entrou em contato com a criança que vive dentro dela.' },
+            { question: 'O que o Príncipe faz para "recarregar a bateria" quando ela está fraca?', options: ['Dorme por muitas horas.', 'Come sua comida preferida.', 'Abraça a Baobá.', 'Toma um banho de chuva.'], answer: 'Abraça a Baobá.', explanation: 'A resposta correta é abraça a Baobá.' },
+            { question: 'Quem o Pequeno Príncipe Preto chama de "A Grande Princesa"?', options: ['A si mesmo.', 'A Lua.', 'A raposa.', 'A Baobá.'], answer: 'A Baobá.', explanation: 'A resposta correta é A Baobá.' },
+            { question: 'O Pequeno Príncipe diz que as amizades devem ser regadas:', options: ['Apenas uma vez por ano.', 'Todos os dias.', 'Somente quando estamos tristes.', 'Com muita ou pouca água, não importa.'], answer: 'Todos os dias.', explanation: 'A resposta correta é todos os dias.' },
+            { question: 'Sobre os seus olhos, o que o Pequeno Príncipe diz?', options: ['Que queria que fossem mais claros.', 'Que são escuros como a noite e ele gosta deles.', 'Que são verdes como as folhas.', 'Que não enxergam muito bem.'], answer: 'Que são escuros como a noite e ele gosta deles.', explanation: 'A resposta correta é que são escuros como a noite e ele gosta deles.' },
+            { question: 'O que aconteceu com a pipa quando o Pequeno Príncipe a viu pela primeira vez?', options: ['Ela passou voando direto por seu planeta.', 'Ela caiu em um buraco.', 'Ela ficou presa nos galhos da Baobá.', 'Ela se desfez no ar.'], answer: 'Ela ficou presa nos galhos da Baobá.', explanation: 'A resposta correta é que ela ficou presa nos galhos da Baobá.' },
+            { question: 'O que o rei egoísta estava fazendo quando o Príncipe chegou?', options: ['Dormindo em seu trono.', 'Comendo um grande banquete.', 'Contando suas estrelas.', 'Lendo um livro.'], answer: 'Contando suas estrelas.', explanation: 'A resposta correta é contando suas estrelas.' },
+            { question: 'O que o rei diz que falta em seu planeta?', options: ['Mais ouro e riquezas.', 'Uma rainha para governar com ele.', 'Alguém para aplaudi-lo.', 'Um exército para protegê-lo.'], answer: 'Alguém para aplaudi-lo.', explanation: 'A resposta correta é alguém para aplaudi-lo.' },
+            { question: 'O Príncipe diz que o rei gasta muito tempo pensando "somente em si". E ele pergunta: "E o...?', options: ['...futuro?!"', '...nós?!"', '...universo?!"', '...dinheiro?!"'], answer: '...nós?!"', explanation: 'A resposta correta é "...nós?!".' },
+            { question: 'O que a raposa queria comer quando sentiu fome?', options: ['Maçãs da macieira.', 'Sementes de Baobá.', 'Uma galinha.', 'Um pedaço de queijo.'], answer: 'Uma galinha.', explanation: 'A resposta correta é uma galinha.' },
+            { question: 'A raposa compara o sentimento de esperar por um amigo a:', options: ['Um dia de chuva.', 'Um dia de sol nas férias.', 'Uma noite de tempestade.', 'Uma tarde de tédio.'], answer: 'Um dia de sol nas férias.', explanation: 'A resposta correta é um dia de sol nas férias.' },
+            { question: 'O que a raposa diz que vai fazer quando o Príncipe for embora?', options: ['Ficar com raiva.', 'Cair no choro.', 'Dar uma festa.', 'Ir caçar galinhas.'], answer: 'Cair no choro.', explanation: 'A resposta correta é cair no choro.' },
+            { question: 'Que apelidos tristes as crianças da escola se davam?', options: ['O livro не especifica os apelidos, apenas diz que davam tristeza.', 'Campeão e Vencedor.', 'Gênio e Sábio.', 'O livro não menciona apelidos.'], answer: 'O livro не especifica os apelidos, apenas diz que davam tristeza.', explanation: 'A resposta correta é que o livro não especifica os apelidos, apenas diz que davam tristeza.' },
+            { question: 'Como eram os muros da escola na Terra?', options: ['Baixos e coloridos.', 'Não havia muros, era aberta.', 'Altos e com grades.', 'Feitos de flores.'], answer: 'Altos e com grades.', explanation: 'A resposta correta é altos e com grades.' },
+            { question: 'O que uma das crianças disse sobre a roupa do Pequeno Príncipe?', options: ['"Que roupa bonita!"', '"Onde você comprou?"', '"A sua roupa é tão esquisita, não é roupa de menino."', '"Eu quero uma igual!"'], answer: '"A sua roupa é tão esquisita, não é roupa de menino."', explanation: 'A resposta correta é "A sua roupa é tão esquisita, não é roupa de menino.".' },
+            { question: 'Na corrida pelas balas, o que as crianças fizeram na primeira tentativa?', options: ['Deram as mãos e correram juntas.', 'Desistiram de correr.', 'Correram, se empurraram e algumas trapacearam.', 'Pediram para o Príncipe dividir as balas antes.'], answer: 'Correram, se empurraram e algumas trapacearam.', explanation: 'A resposta correta é que correram, se empurraram e algumas trapacearam.' },
+            { question: 'O que as crianças fizeram depois que o Príncipe explicou o que era Ubuntu?', options: ['Foram embora com raiva.', 'Se olharam e se abraçaram.', 'Riram dele novamente.', 'Começaram a brigar.'], answer: 'Se olharam e se abraçaram.', explanation: 'A resposta correta é que se olharam e se abraçaram.' },
+            { question: 'O que fez o Pequeno Príncipe Preto se apressar para ir embora da Terra?', options: ['O sol forte que apareceu.', 'O cheiro de terra molhada e a ventania que se aproximava.', 'O chamado da raposa.', 'O barulho dos adultos.'], answer: 'O cheiro de terra molhada e a ventania que se aproximava.', explanation: 'A resposta correta é o cheiro de terra molhada e a ventania que se aproximava.' },
+            { question: 'O que o Príncipe percebeu que todas as pessoas que ele conheceu queriam "no fundo, no fundo"?', options: ['Dinheiro', 'Poder', 'Amor', 'Fama'], answer: 'Amor', explanation: 'A resposta correta é Amor.' },
+            { question: 'Por que as sementes da Baobá tinham acabado?', options: ['Porque o Príncipe as perdeu no caminho.', 'Porque a Baobá disse que não conseguiria dar mais.', 'Porque o rei pegou todas para ele.', 'Porque a raposa as comeu.'], answer: 'Porque a Baobá disse que não conseguiria dar mais.', explanation: 'A resposta correta é porque a Baobá disse que não conseguiria dar mais.' },
+            { question: 'A Baobá chorava como uma "cachoeira de..."?', options: ['Iemanjá', 'Oxum', 'Iansã', 'Nanã'], answer: 'Oxum', explanation: 'A resposta correta é Oxum.' },
+            { question: 'O que o autor Rodrigo França herdou de sua avó Bené?', options: ['O amor pela culinária.', 'O conhecimento sobre ancestralidade.', 'O talento para a pintura.', 'A paixão por viagens.'], answer: 'O conhecimento sobre ancestralidade.', explanation: 'A resposta correta é o conhecimento sobre ancestralidade.' },
+            { question: 'De acordo com o autor, o que seus pais o ensinaram a valorizar?', options: ['O dinheiro acima de tudo.', 'Apenas os estudos.', 'A cultura negra.', 'A cultura europeia.'], answer: 'A cultura negra.', explanation: 'A resposta correta é a cultura negra.' },
+            { question: 'Quantos espectadores a peça "O Pequeno Príncipe Preto" teve em seu primeiro ano?', options: ['Menos de mil.', 'Cerca de dez mil.', 'Mais de quarenta mil.', 'Mais de cem mil.'], answer: 'Mais de quarenta mil.', explanation: 'A resposta correta é mais de quarenta mil.' },
+            { question: 'O Pequeno Príncipe Preto se sentiu sozinho na Terra e queria ir para casa para:', options: ['Comer goiabada com queijo.', 'Dormir em sua cama.', 'Abraçar a Baobá e recarregar a energia.', 'Brincar com sua pipa.'], answer: 'Abraçar a Baobá e recarregar a energia.', explanation: 'A resposta correta é abraçar a Baobá e recarregar a energia.' },
+            { question: 'O que o Príncipe pensa sobre crescer?', options: ['Que é a melhor fase da vida.', 'Que é uma forma de perder os sonhos e deixar de ver estrelas.', 'Que é importante para ganhar dinheiro.', 'Que não faz diferença na vida de uma pessoa.'], answer: 'Que é uma forma de perder os sonhos e deixar de ver estrelas.', explanation: 'A resposta correta é que é uma forma de perder os sonhos e deixar de ver estrelas.' },
+            { question: 'Qual a primeira coisa que o Pequeno Príncipe Preto fala no livro?', options: ['"Eu sou o Príncipe deste planeta."', '"Vocês só estão me ouvindo, mas não conseguem me ver."', '"Que árvore linda!"', '"Olá, meu nome é..."'], answer: '"Vocês só estão me ouvindo, mas não conseguem me ver."', explanation: 'A resposta correta é "Vocês só estão me ouvindo, mas não conseguem me ver.".' },
+            { question: 'O Príncipe diz que precisaria de "muita gente" para conseguir fazer o quê?', options: ['Regar a Baobá.', 'Construir uma casa.', 'Abraçar a Baobá.', 'Viajar para a Terra.'], answer: 'Abraçar a Baobá.', explanation: 'A resposta correta é abraçar a Baobá.' },
+            { question: 'Antes de deixar seu cabelo crescer, como o Príncipe o usava?', options: ['Com tranças longas.', 'Bem baixinho, cortado.', 'Pintado de azul.', 'Preso em um coque.'], answer: 'Bem baixinho, cortado.', explanation: 'A resposta correta é bem baixinho, cortado.' },
+            { question: 'O manto do rei no segundo planeta era:', options: ['Curto e azul.', 'Enorme, com vários metros.', 'Feito de estrelas.', 'Invisível.'], answer: 'Enorme, com vários metros.', explanation: 'A resposta correta é enorme, com vários metros.' },
+            { question: 'O que o rei faz logo após permitir que o Príncipe vá embora?', options: ['Começa a chorar.', 'Pede para ele ficar mais um pouco, oferecendo doces.', 'Vira as costas e volta a contar estrelas.', 'Dá uma ordem para que chova.'], answer: 'Vira as costas e volta a contar estrelas.', explanation: 'A resposta correta é que vira as costas e volta a contar estrelas.' },
+            { question: 'O que o Príncipe queria tomar junto de um amigo?', options: ['Chocolate quente.', 'Suco de melancia com tangerina.', 'Café com leite.', 'Refrigerante de uva.'], answer: 'Suco de melancia com tangerina.', explanation: 'A resposta correta é suco de melancia com tangerina.' },
+            { question: 'Como a raposa descreve os homens da Terra?', options: ['Como gentis e amigos dos animais.', 'Como caçadores que usam armas.', 'Como medrosos e fracos.', 'Como seres que voam em pipas.'], answer: 'Como caçadores que usam armas.', explanation: 'A resposta correta é como caçadores que usam armas.' },
+            { question: 'O que a raposa diz que vai guardar do encontro com o Príncipe?', options: ['Uma semente da Baobá.', 'Um fio de seu cabelo.', 'O encontro, como um sonho bom.', 'Uma foto imaginária.'], answer: 'O encontro, como um sonho bom.', explanation: 'A resposta correta é o encontro, como um sonho bom.' },
+            { question: 'Qual foi a reação do primeiro "moço" com quem o Pequeno Príncipe tentou falar na Terra?', options: ['Ele sorriu e acenou.', 'Ele parou para conversar.', 'Ele não respondeu e foi grosseiro.', 'Ele deu um presente ao Príncipe.'], answer: 'Ele não respondeu e foi grosseiro.', explanation: 'A resposta correta é que ele não respondeu e foi grosseiro.' },
+            { question: 'Os bonecos e bonecas das crianças da Terra se pareciam com quem?', options: ['Com a maioria das crianças.', 'Não se pareciam com a maioria das crianças.', 'Com o Pequeno Príncipe Preto.', 'Com animais da floresta.'], answer: 'Não se pareciam com a maioria das crianças.', explanation: 'A resposta correta é que não se pareciam com a maioria das crianças.' },
+            { question: 'Qual foi a reação das crianças quando o Príncipe disse "Não toquem no meu cabelo!"?', options: ['Elas pediram desculpas.', 'Elas obedeceram e se afastaram.', 'Elas riram dele.', 'O livro não descreve a reação delas a essa frase específica.'], answer: 'O livro не descreve a reação delas a essa frase específica.', explanation: 'A resposta correta é que o livro não descreve a reação delas a essa frase específica.' },
+            { question: 'Como o Príncipe descreve a si mesmo em relação a outros negros?', options: ['Exatamente igual a todos.', 'Um pouco mais claro que alguns e um pouco mais escuro que outros.', 'Completamente diferente.', 'O único negro do universo.'], answer: 'Um pouco mais claro que alguns e um pouco mais escuro que outros.', explanation: 'A resposta correta é um pouco mais claro que alguns e um pouco mais escuro que outros.' },
+            { question: 'Para o Pequeno Príncipe Preto, o que é "ancestralidade"?', options: ['Conhecer apenas o futuro.', 'Viver o presente sem pensar no passado.', 'Conhecer seu passado, sua origem e suas características.', 'Ter muitos parentes vivos.'], answer: 'Conhecer seu passado, sua origem e suas características.', explanation: 'A resposta correta é conhecer seu passado, sua origem e suas características.' },
+            { question: 'Por que o rei se achava rico?', options: ['Porque tinha um trono de ouro.', 'Porque ele achava que era dono de todas as estrelas.', 'Porque tinha um manto muito caro.', 'Porque seu planeta era o maior de todos.'], answer: 'Porque ele achava que era dono de todas as estrelas.', explanation: 'A resposta correta é porque ele achava que era dono de todas as estrelas.' },
+            { question: 'Que cheiro o Pequeno Príncipe Preto sente que anuncia a chuva e a ventania?', options: ['Cheiro de flores.', 'Cheiro de mar.', 'Cheiro de terra molhada.', 'Cheiro de comida.'], answer: 'Cheiro de terra molhada.', explanation: 'A resposta correta é cheiro de terra molhada.' },
+            { question: 'O que o Príncipe diz aos seus novos amigos da Terra que eles nunca devem deixar de fazer?', options: ['Deixar de competir uns com os outros.', 'Deixar de ir à escola.', 'Deixar de sonhar e de olhar para as estrelas.', 'Deixar de brincar com jogos eletrônicos.'], answer: 'Deixar de sonhar e de olhar para as estrelas.', explanation: 'A resposta correta é deixar de sonhar e de olhar para as estrelas.' },
+            { question: 'Qual a frase em iorubá que aparece no final do livro, e o que ela significa?', options: ['Modupé, que significa "obrigado".', 'Orun, que significa "céu".', 'Erês, que significa "crianças".', 'Olorun kosi pure, que significa "Que esteja na paz".'], answer: 'Olorun kosi pure, que significa "Que esteja na paz".', explanation: 'A resposta correta é Olorun kosi pure, que significa "Que esteja na paz".' },
+            { question: 'O autor dedica o livro a quem?', options: ['Aos seus filhos.', 'A toda a sua ancestralidade.', 'A todas as crianças do Brasil.', 'À ilustradora Juliana Barbosa Pereira.'], answer: 'A toda a sua ancestralidade.', explanation: 'A resposta correta é a toda a sua ancestralidade.' },
+            { question: 'O que o Príncipe precisava fazer para deixar seu planeta e conhecer outros?', options: ['Pedir permissão à Baobá.', 'Construir um barco.', 'Esperar o tempo certo.', 'Aproveitar as ventanias.'], answer: 'Aproveitar as ventanias.', explanation: 'A resposta correta é aproveitar as ventanias.' },
+            { question: 'Ao final da história, o Pequeno Príncipe Preto está pronto para uma nova aventura quando o que acontecer?', options: ['Quando a nova Baobá der flores.', 'Quando chegar a próxima ventania.', 'Quando ele aprender a voar sozinho.', 'Quando a raposa vier visitá-lo.'], answer: 'Quando chegar a próxima ventania.', explanation: 'A resposta correta é quando chegar a próxima ventania.' },
+            { question: 'O que o Pequeno Príncipe Preto precisaria para conseguir abraçar a Baobá inteira?', options: ['De braços muito mais longos.', 'De uma escada gigante.', 'Da ajuda de duas, três, quatro ou mais pessoas.', 'De uma corda mágica.'], answer: 'Da ajuda de duas, três, quatro ou mais pessoas.', explanation: 'A resposta correta é da ajuda de duas, três, quatro ou mais pessoas.' },
+            { question: 'O que o Pequeno Príncipe faz quando se sente com a "bateria fraca"?', options: ['Dorme por um dia inteiro.', 'Come uma fruta da Baobá.', 'Vai até a Baobá para recarregar as energias.', 'Bebe a água da chuva.'], answer: 'Vai até a Baobá para recarregar as energias.', explanation: 'A resposta correta é que ele vai até a Baobá para recarregar as energias.' },
+            { question: 'A Baobá é descrita como uma árvore milenar. O que "milenar" significa?', options: ['Que ela tem mil folhas.', 'Que ela dá mil frutos.', 'Que ela é muito fraca.', 'Que ela existe há milhares de anos.'], answer: 'Que ela existe há milhares de anos.', explanation: 'A resposta correta é que ela existe há milhares de anos.' },
+            { question: 'Por que o Pequeno Príncipe rega a Baobá com água morna, mesmo ela gostando de solo seco?', options: ['Porque a água fria a faria dormir.', 'Porque ele não gosta de ver ninguém com sede.', 'Porque a água morna a faz crescer mais rápido.', 'Porque era a única água que ele tinha.'], answer: 'Porque ele não gosta de ver ninguém com sede.', explanation: 'A resposta correta é porque ele não gosta de ver ninguém com sede.' },
+            { question: 'Como o livro descreve os galhos da Baobá?', options: ['Como se fossem braços longos.', 'Como se estivessem cheios de flores.', 'Como se fossem cabelos verdes.', 'Como se fossem raízes viradas para cima.'], answer: 'Como se fossem raízes viradas para cima.', explanation: 'A resposta correta é como se fossem raízes viradas para cima.' },
+            { question: 'O que o Pequeno Príncipe quer dizer com "Sabedoria é comida que nos alimenta"?', options: ['Que pessoas sábias comem muito.', 'Que aprender coisas novas é tão importante quanto comer.', 'Que só se pode ser sábio depois de comer.', 'Que os livros são feitos de comida.'], answer: 'Que aprender coisas novas é tão importante quanto comer.', explanation: 'A resposta correta é que aprender coisas novas é tão importante quanto comer.' },
+            { question: 'Quem eram os tataravós do Pequeno Príncipe Preto, segundo a história?', options: ['Guerreiros e caçadores.', 'Reis e rainhas.', 'Agricultores e pescadores.', 'Viajantes e exploradores.'], answer: 'Reis e rainhas.', explanation: 'A resposta correta é Reis e rainhas.' },
+            { question: 'O Pequeno Príncipe compara os diferentes tons de pele com:', options: ['As cores do arco-íris.', 'As diferentes cores de lápis.', 'As fases da lua.', 'As estações do ano.'], answer: 'As diferentes cores de lápis.', explanation: 'A resposta correta é as diferentes cores de lápis.' },
+            { question: 'O que o Príncipe acha da frase "meu cabelo é ruim"?', options: ['Ele concorda, pois dá muito trabalho.', 'Ele discorda, porque seu cabelo não fala mal de ninguém.', 'Ele não se importa com o que dizem.', 'Ele acha engraçado e ri.'], answer: 'Ele discorda, porque seu cabelo não fala mal de ninguém.', explanation: 'A resposta correta é que ele discorda, porque seu cabelo não fala mal de ninguém.' },
+            { question: 'O que inspira o Pequeno Príncipe a querer deixar o cabelo crescer para o alto?', options: ['A coroa do rei que ele conheceu.', 'Os galhos da Baobá.', 'As nuvens no céu.', 'O voo da pipa.'], answer: 'Os galhos da Baobá.', explanation: 'A resposta correta são os galhos da Baobá.' },
+            { question: 'O que o Pequeno Príncipe estava fazendo quando a pipa apareceu no céu?', options: ['Ele estava feliz, dançando.', 'Ele estava triste em seu canto.', 'Ele estava dormindo encostado na Baobá.', 'Ele estava regando a Baobá.'], answer: 'Ele estava triste em seu canto.', explanation: 'A resposta correta é que ele estava triste em seu canto.' },
+            { question: 'Como a pipa voava no ar antes de ficar presa?', options: ['Como um pássaro rápido.', 'Como uma folha caindo.', 'Como uma bailarina.', 'Como uma flecha.'], answer: 'Como uma bailarina.', explanation: 'A resposta correta é como uma bailarina.' },
+            { question: 'O que o rei do segundo planeta estava vestindo?', options: ['Uma armadura dourada.', 'Um pijama de estrelas.', 'Um manto vermelho com vários metros de comprimento.', 'Uma roupa simples de algodão.'], answer: 'Um manto vermelho com vários metros de comprimento.', explanation: 'A resposta correta é um manto vermelho com vários metros de comprimento.' },
+            { question: 'Por que o rei vivia sozinho em seu planeta?', options: ['Porque ele preferia a tranquilidade.', 'Porque ninguém aguentava uma pessoa egoísta e que só resmunga.', 'Porque seu planeta era pequeno demais para mais alguém.', 'Porque ele era muito tímido.'], answer: 'Porque ninguém aguentava uma pessoa egoísta e que só resmunga.', explanation: 'A resposta correta é porque ninguém aguentava uma pessoa egoísta e que só resmunga.' },
+            { question: 'O que o rei faz quando o Pequeno Príncipe espirra?', options: ['Fica bravo e manda ele parar.', 'Dá um lenço para ele.', 'Ordena que ele não espirre mais.', 'Permite que ele espirre.'], answer: 'Permite que ele espirre.', explanation: 'A resposta correta é que permite que ele espirre.' },
+            { question: 'Qual foi a primeira ordem que o rei deu ao Pequeno Príncipe ao vê-lo?', options: ['"Permito que você pouse em meu planeta."', '"Permito que você ouse entrar no meu planeta sem pedir licença."', '"Aplauda-me agora mesmo!"', '"Diga-me o seu nome."'], answer: '"Permito que você ouse entrar no meu planeta sem pedir licença."', explanation: 'A resposta correta é "Permito que você ouse entrar no meu planeta sem pedir licença.".' },
+            { question: 'O que o Pequeno Príncipe Preto pensa sobre os adultos e a posse das coisas?', options: ['Que eles são muito inteligentes por terem tudo.', 'Que eles acham que têm tudo, mas na verdade não têm nada.', 'Que eles deveriam ter ainda mais coisas.', 'Que as crianças não deveriam ter nada.'], answer: 'Que eles acham que têm tudo, mas na verdade não têm nada.', explanation: 'A resposta correta é que eles acham que têm tudo, mas na verdade não têm nada.' },
+            { question: 'O que o Pequeno Príncipe faria com um amigo no lugar de ter estrelas?', options: ['Competiria para ver quem é o melhor.', 'Daria ordens a ele.', 'Ignoraria o amigo para olhar o céu.', 'Conversaria e tomaria um suco.'], answer: 'Conversaria e tomaria um suco.', explanation: 'A resposta correta é que conversaria e tomaria um suco.' },
+            { question: 'Quando a semente de Baobá plantada no planeta do rei crescer, o que o rei poderá entender?', options: ['Como contar estrelas mais rápido.', 'O que é UBUNTU.', 'Como costurar um manto.', 'Como voar de pipa.'], answer: 'O que é UBUNTU.', explanation: 'A resposta correta é o que é UBUNTU.' },
+            { question: 'O que a raposa diz que é a única diferença entre o Pequeno Príncipe e os homens que ela conhece?', options: ['A cor da pele.', 'O tamanho do cabelo.', 'A altura.', 'Que ele é pequeno, tem pipa e não tem arma.'], answer: 'Que ele é pequeno, tem pipa e não tem arma.', explanation: 'A resposta correta é que ele é pequeno, tem pipa e não tem arma.' },
+            { question: 'Se o Pequeno Príncipe cativasse a raposa, o que mudaria entre eles?', options: ['A raposa se tornaria uma princesa.', 'O Príncipe se tornaria um caçador.', 'Eles teriam necessidade um do outro e seriam únicos.', 'Eles poderiam viajar juntos na pipa.'], answer: 'Eles teriam necessidade um do outro e seriam únicos.', explanation: 'A resposta correta é que eles teriam necessidade um do outro e seriam únicos.' },
+            { question: 'A raposa diz que uma amizade sincera é:', options: ['Algo que não existe.', 'Algo que se compra.', 'A coisa menos importante do mundo.', 'A melhor coisa que existe.'], answer: 'A melhor coisa que existe.', explanation: 'A resposta correta é a melhor coisa que existe.' },
+            { question: 'Por que a raposa pede para o Príncipe ir embora antes que ela se apegue?', options: ['Porque ela não gosta de companhia.', 'Porque ela sabe que os viajantes partem e deixam saudade.', 'Porque estava na hora dela caçar.', 'Porque ela estava com sono.'], answer: 'Porque ela sabe que os viajantes partem e deixam saudade.', explanation: 'A resposta correta é porque ela sabe que os viajantes partem e deixam saudade.' },
+            { question: 'O que o Príncipe percebe sobre as "caixas pequenas iluminadas" que os adultos usavam?', options: ['Que eram brinquedos muito divertidos.', 'Que eram usadas para falar com a família.', 'Que os adultos não as largavam.', 'Que elas mostravam o caminho para casa.'], answer: 'Que os adultos não as largavam.', explanation: 'A resposta correta é que os adultos não as largavam.' },
+            { question: 'Como o Pequeno Príncipe descreve o ritmo de vida dos adultos na Terra?', options: ['Lento e tranquilo.', 'Tudo era muito rápido, mas parecia que não aproveitavam o tempo.', 'Parado, nada acontecia.', 'Cheio de festas e danças.'], answer: 'Tudo era muito rápido, mas parecia que não aproveitavam o tempo.', explanation: 'A resposta correta é que tudo era muito rápido, mas parecia que não aproveitavam o tempo.' },
+            { question: 'O que o Pequeno Príncipe sentiu falta nos adultos da Terra?', options: ['Riqueza e poder.', 'Roupas bonitas e coroas.', 'Abraço e sorriso.', 'Pipas e sementes.'], answer: 'Abraço e sorriso.', explanation: 'A resposta correta é abraço e sorriso.' },
+            { question: 'O que o Príncipe ouviu que o fez encontrar as crianças?', options: ['O som de uma música alta.', 'O choro de um bebê.', 'O barulho de jogos eletrônicos.', 'Sorrisos e gargalhadas de erês.'], answer: 'Sorrisos e gargalhadas de erês.', explanation: 'A resposta correta são sorrisos e gargalhadas de erês.' },
+            { question: 'Como o Pequeno Príncipe descreve as mochilas das crianças?', options: ['Leves e coloridas.', 'Pesadas e esquisitas.', 'Feitas de palha.', 'Cheias de doces.'], answer: 'Pesadas e esquisitas.', explanation: 'A resposta correta é pesadas e esquisitas.' },
+            { question: 'O livro diz que havia "cor para menino e cor para menina". Qual a opinião do Príncipe sobre isso?', options: ['Ele concorda que meninos e meninas devem usar cores diferentes.', 'Ele acha que "cor é cor", sem distinção.', 'Ele acha que as meninas deveriam usar todas as cores.', 'Ele acha que os meninos não deveriam usar cores.'], answer: 'Ele acha que "cor é cor", sem distinção.', explanation: 'A resposta correta é que ele acha que "cor é cor", sem distinção.' },
+            { question: 'Além das cores, o que mais era separado entre meninos e meninas na escola da Terra?', options: ['A comida.', 'As salas de aula.', 'As brincadeiras.', 'Os horários de chegada.'], answer: 'As brincadeiras.', explanation: 'A resposta correta são as brincadeiras.' },
+            { question: 'O que o Pequeno Príncipe quis dizer com a pergunta "O que é normal?"?', options: ['Que ele queria ser exatamente como as outras crianças.', 'Que ele não entendia as regras da escola.', 'Que ser diferente não significa não ser normal.', 'Que ele queria aprender a falar "normal".'], answer: 'Que ser diferente não significa não ser normal.', explanation: 'A resposta correta é que ser diferente não significa não ser normal.' },
+            { question: 'O que acontecia em todas as brincadeiras das crianças na Terra?', options: ['Todos ganhavam no final.', 'Havia sempre disputa e competição.', 'As regras mudavam a todo momento.', 'Eram sempre brincadeiras silenciosas.'], answer: 'Havia sempre disputa e competição.', explanation: 'A resposta correta é que havia sempre disputa e competição.' },
+            { question: 'Qual a frase que as crianças usavam para justificar a competição?', options: ['"O importante é competir."', '"Que vença o melhor."', '"Vamos todos nos divertir."', '"Não há vencedores."'], answer: '"Que vença o melhor."', explanation: 'A resposta correta é "Que vença o melhor.".' },
+            { question: 'Qual a condição imposta pelo "dono da bola" para que todos pudessem brincar?', options: ['Que todos fizessem o que ele mandasse.', 'Que ele fosse escolhido para o time, senão não emprestaria a bola.', 'Que o jogo durasse pouco tempo.', 'Que ninguém chutasse a bola com força.'], answer: 'Que ele fosse escolhido para o time, senão não emprestaria a bola.', explanation: 'A resposta correta é que ele fosse escolhido para o time, senão não emprestaria a bola.' },
+            { question: 'Ao ver o dono da bola, de qual outro personagem o Pequeno Príncipe se lembrou?', options: ['Da raposa.', 'Da Baobá.', 'De si mesmo.', 'Do rei que contava estrelas.'], answer: 'Do rei que contava estrelas.', explanation: 'A resposta correta é do rei que contava estrelas.' },
+            { question: 'O que o Pequeno Príncipe não queria que acontecesse com aquelas crianças?', options: ['Que elas se tornassem suas amigas.', 'Que elas aprendessem a voar de pipa.', 'Que elas crescessem como o rei ou os adultos apressados.', 'Que elas voltassem para casa.'], answer: 'Que elas crescessem como o rei ou os adultos apressados.', explanation: 'A resposta correta é que elas crescessem como o rei ou os adultos apressados.' },
+            { question: 'Na explicação sobre Ubuntu, o que o Príncipe diz que aconteceria se todos fossem juntos pegar as balas?', options: ['Apenas o mais rápido ganharia.', 'As balas desapareceriam.', 'Todos ganhariam e seriam vencedores.', 'O cesto de balas ficaria trancado.'], answer: 'Todos ganhariam e seriam vencedores.', explanation: 'A resposta correta é que todos ganhariam e seriam vencedores.' },
+            { question: 'Qual a pergunta que o Príncipe faz para as crianças refletirem sobre a felicidade?', options: ['"Como um de vocês pode ficar feliz se todos os outros estiverem tristes?"', '"Quem de vocês merece mais balas?"', '"Por que vocês não gostam de correr?"', '"Vocês preferem balas ou brinquedos?"'], answer: '"Como um de vocês pode ficar feliz se todos os outros estiverem tristes?"', explanation: 'A resposta correta é "Como um de vocês pode ficar feliz se todos os outros estiverem tristes?".' },
+            { question: 'O que o Príncipe sentiu pelo lugar depois que as crianças se abraçaram?', options: ['Medo', 'Tristeza', 'Vontade de ir embora.', 'Esperança'], answer: 'Esperança', explanation: 'A resposta correta é Esperança.' },
+            { question: 'O que o Pequeno Príncipe plantou na escola antes de partir?', options: ['Todas as sementes que ele tinha.', 'Uma flor que fede a carniça.', 'A última semente da Baobá.', 'Uma macieira.'], answer: 'A última semente da Baobá.', explanation: 'A resposta correta é a última semente da Baobá.' },
+            { question: 'Por que o Pequeno Príncipe tinha que se apressar quando a ventania começou na Terra?', options: ['Porque ele não gostava de chuva.', 'Porque pipa não combina com chuva.', 'Porque as crianças o estavam expulsando.', 'Porque a raposa o chamou.'], answer: 'Porque pipa não combina com chuva.', explanation: 'A resposta correta é porque pipa não combina com chuva.' },
+            { question: 'Ao se despedir, o que o Pequeno Príncipe diz que as crianças são?', options: ['Esquisitas e barulhentas.', 'Fracas e medrosas.', 'Lindas e fortes.', 'Egoístas e competitivas.'], answer: 'Lindas e fortes.', explanation: 'A resposta correta é Lindas e fortes.' },
+            { question: 'O que o Pequeno Príncipe acha sobre viajar?', options: ['Que é cansativo e não vale a pena.', 'Que ele viaja para sentir saudade de casa e voltar mais feliz.', 'Que ele nunca mais quer sair de seu planeta.', 'Que todos os planetas são iguais.'], answer: 'Que ele viaja para sentir saudade de casa e voltar mais feliz.', explanation: 'A resposta correta é que ele viaja para sentir saudade de casa e voltar mais feliz.' },
+            { question: 'Ao voltar, o que o Príncipe faz para valorizar seu lar?', options: ['Mede o tamanho do planeta.', 'Observa cada canto e cada detalhe.', 'Pinta a Baobá com novas cores.', 'Constrói um muro ao redor do planeta.'], answer: 'Observa cada canto e cada detalhe.', explanation: 'A resposta correta é que observa cada canto e cada detalhe.' },
+            { question: 'O que o Príncipe contou para a Baobá sobre sua viagem?', options: ['Apenas sobre o rei.', 'Apenas sobre a raposa.', 'Que tinha sido a maior aventura de sua vida.', 'Que ele não conheceu ninguém interessante.'], answer: 'Que tinha sido a maior aventura de sua vida.', explanation: 'A resposta correta é que tinha sido a maior aventura de sua vida.' },
+            { question: 'A Baobá disse que muita gente precisaria de empatia, afeto, carinho e...', options: ['Dinheiro.', 'Estrelas.', 'Respeito.', 'Brinquedos.'], answer: 'Respeito.', explanation: 'A resposta correta é Respeito.' },
+            { question: 'Como estava a Baobá quando o Pequeno Príncipe a encontrou em silêncio?', options: ['Forte e cheia de energia.', 'Dormindo e roncando alto.', 'Tão fraquinha, mesmo com a água que ele deixou.', 'Com os galhos cheios de pipas presas.'], answer: 'Tão fraquinha, mesmo com a água que ele deixou.', explanation: 'A resposta correta é tão fraquinha, mesmo com a água que ele deixou.' },
+            { question: 'O que a Baobá disse que o Príncipe deveria fazer quando sentisse saudade dela?', options: ['Chorar até a saudade passar.', 'Olhar para as estrelas.', 'Plantar outra árvore.', 'Viajar para outro planeta.'], answer: 'Olhar para as estrelas.', explanation: 'A resposta correta é olhar para as estrelas.' },
+            { question: 'A partida da Baobá permitiria que o quê acontecesse?', options: ['Que o Príncipe pudesse viajar mais.', 'Que o planeta ficasse maior.', 'Que outra árvore pudesse brotar na terra.', 'Que as estrelas brilhassem mais forte.'], answer: 'Que outra árvore pudesse brotar na terra.', explanation: 'A resposta correta é que outra árvore pudesse brotar na terra.' },
+            { question: 'Onde o Pequeno Príncipe guarda a lembrança da Baobá?', options: ['Em um livro de memórias.', 'No seu coração.', 'Em um desenho na areia.', 'Numa caixinha de sementes.'], answer: 'No seu coração.', explanation: 'A resposta correta é no seu coração.' },
+            { question: 'Qual foi a primeira coisa que o Pequeno Príncipe viu após a partida da Baobá?', options: ['Uma estrela cadente.', 'A pipa voltando para buscá-lo.', 'Uma muda de uma nova, pequena Baobá.', 'A raposa acenando de longe.'], answer: 'Uma muda de uma nova, pequena Baobá.', explanation: 'A resposta correta é uma muda de uma nova, pequena Baobá.' },
+            { question: 'O que o autor herdou de seus pais?', options: ['A paixão pela filosofia Ioruba.', 'A educação que valoriza a cultura negra.', 'O conhecimento sobre ancestralidade.', 'O talento para o teatro.'], answer: 'A educação que valoriza a cultura negra.', explanation: 'A resposta correta é a educação que valoriza a cultura negra.' },
+            { question: 'A peça de teatro que originou o livro foi escrita e dirigida em qual ano?', options: ['2020', '2018', '1992', '2019'], answer: '2018', explanation: 'A resposta correta é 2018.' },
+            { question: 'O autor diz que a vida é mais linda quando estamos juntos, semeando amor e...', options: ['Competindo uns com os outros.', 'Respeitando o outro.', 'Ignorando as diferenças.', 'Acumulando riquezas.'], answer: 'Respeitando o outro.', explanation: 'A resposta correta é respeitando o outro.' },
+            { question: 'Qual o nome do coletivo de Rodrigo França que ganhou o Prêmio Shell de Teatro?', options: ['Pequeno Príncipe Preto Cia.', 'Coletivo Ubuntu.', 'Segunda Black.', 'Teatro Ioruba.'], answer: 'Segunda Black.', explanation: 'A resposta correta é Segunda Black.' },
+            { question: 'Em quantos espetáculos Rodrigo França já trabalhou como ator?', options: ['8', '7', '18', '42'], answer: '42', explanation: 'A resposta correta é 42.' },
+            { question: 'Juliana Barbosa Pereira, a ilustradora, é responsável também pela...', options: ['Trilha sonora da peça.', 'Identidade visual do projeto.', 'Venda dos ingressos.', 'Direção do espetáculo.'], answer: 'Identidade visual do projeto.', explanation: 'A resposta correta é a identidade visual do projeto.' },
+            { question: 'O que o Pequeno Príncipe compara a um "terremoto dentro de mim"?', options: ['O medo.', 'A saudade.', 'A fome da raposa.', 'A alegria.'], answer: 'A fome da raposa.', explanation: 'A resposta correta é a fome da raposa.' },
+            { question: 'O Pequeno Príncipe compara seu sorriso a quê?', options: ['Uma banana.', 'A lua crescente.', 'Ele o descreve como simpático e bonito.', 'Uma fatia de melancia.'], answer: 'Ele o descreve como simpático e bonito.', explanation: 'A resposta correta é que ele o descreve como simpático e bonito.' },
+            { question: 'O que aconteceu com o sapato do Príncipe na Terra?', options: ['Ele o perdeu.', 'A sola descolou de tanto andar.', 'Ele o trocou por um novo.', 'As crianças o esconderam.'], answer: 'A sola descolou de tanto andar.', explanation: 'A resposta correta é que a sola descolou de tanto andar.' },
+            { question: 'Como a Baobá é chamada no início do livro?', options: ['"A árvore da vida".', '"A única companheira" do Príncipe.', '"A rainha do planeta".', '"A árvore falante".'], answer: '"A única companheira" do Príncipe.', explanation: 'A resposta correta é "A única companheira" do Príncipe.' },
+            { question: 'Qual foi a promessa que o Príncipe fez à Baobá?', options: ['De nunca mais sair do planeta.', 'De sempre regá-la com água morna.', 'De espalhar as sementes dela e o Ubuntu.', 'De cantar para ela todas as noites.'], answer: 'De espalhar as sementes dela e o Ubuntu.', explanation: 'A resposta correta é de espalhar as sementes dela e o Ubuntu.' },
+            { question: 'Como a pele do Príncipe fica quando ele a rega (simbolicamente)?', options: ['Mais clara, cor de areia.', 'Brilhante como o sol.', 'Mais escura, cor de chocolate.', 'Verde como as folhas.'], answer: 'Mais escura, cor de chocolate.', explanation: 'A resposta correta é mais escura, cor de chocolate.' },
+            { question: 'O que o Príncipe acha sobre a tristeza?', options: ['Que ela deve ficar para sempre.', 'Que, se ela vier, deve ir embora logo.', 'Que é um sentimento bom.', 'Que só os adultos ficam tristes.'], answer: 'Que, se ela vier, deve ir embora logo.', explanation: 'A resposta correta é que, se ela vier, deve ir embora logo.' },
+            { question: 'Qual foi a reação do Pequeno Príncipe ao poder e riqueza do rei?', options: ['Ele ficou impressionado e quis ser igual.', 'Ele não se importou, pois valorizava o afeto.', 'Ele sentiu inveja e quis pegar as estrelas.', 'Ele pediu para o rei dividir tudo com ele.'], answer: 'Ele não se importou, pois valorizava o afeto.', explanation: 'A resposta correta é que ele não se importou, pois valorizava o afeto.' },
+            { question: 'A raposa diz que, se o Príncipe a cativar, ela o achará:', options: ['Igual a todos os outros.', 'Único no mundo.', 'Um bom caçador.', 'Um pouco chato.'], answer: 'Único no mundo.', explanation: 'A resposta correta é único no mundo.' },
+            { question: 'O que a raposa aconselha o Príncipe a ser paciente?', options: ['Na hora de comer.', 'Na hora de fazer amigos, um dia após o outro.', 'Para esperar a chuva.', 'Para o cabelo crescer.'], answer: 'Na hora de fazer amigos, um dia após o outro.', explanation: 'A resposta correta é na hora de fazer amigos, um dia após o outro.' },
+            { question: 'O que o Pequeno Príncipe pensou que precisaria na Terra para resolver os problemas dos adultos?', options: ['Apenas uma semente da Baobá.', 'Milhares de sementes e de Baobás.', 'Uma coroa e um manto.', 'Muitas balas e doces.'], answer: 'Milhares de sementes e de Baobás.', explanation: 'A resposta correta é milhares de sementes e de Baobás.' },
+            { question: 'O que uma criança disse sobre o jeito de falar do Pequeno Príncipe?', options: ['"Ele fala muito rápido."', '"Ele não fala nada."', '"Ele fala gritando."', '"Ele fala cantando."'], answer: '"Ele fala cantando."', explanation: 'A resposta correta é "Ele fala cantando.".' },
+            { question: 'O que o Pequeno Príncipe diz que os sonhos e as estrelas têm em comum para as crianças?', options: ['Que ambos são distantes e inalcançáveis.', 'Que as crianças nunca devem deixar de sonhar e olhar para elas.', 'Que ambos desaparecem durante o dia.', 'Que ambos podem ser comprados.'], answer: 'Que as crianças nunca devem deixar de sonhar e olhar para elas.', explanation: 'A resposta correta é que as crianças nunca devem deixar de sonhar e olhar para elas.' },
+            { question: 'Viajar, para o Pequeno Príncipe, serve para valorizar:', options: ['Outros planetas.', 'A sua própria casa.', 'A solidão.', 'A riqueza.'], answer: 'A sua própria casa.', explanation: 'A resposta correta é a sua própria casa.' },
+            { question: 'De onde o Príncipe tiraria mais sementes se as da Baobá acabaram?', options: ['Essa era uma preocupação dele, pois ele não sabia a resposta.', 'Do planeta do rei.', 'Da Terra.', 'Da nova muda de Baobá.'], answer: 'Da nova muda de Baobá.', explanation: 'A resposta correta é da nova muda de Baobá.' },
+            { question: 'A Baobá disse que um dia ela partiria para se tornar o quê do Príncipe?', options: ['Uma estrela.', 'Sua ancestralidade.', 'A lua.', 'Uma pipa.'], answer: 'Sua ancestralidade.', explanation: 'A resposta correta é sua ancestralidade.' },
+            { question: 'O que o autor Rodrigo França e seus irmãos têm em comum?', options: ['São todos atores.', 'São apaixonados pela filosofia Ioruba.', 'Moram todos no mesmo planeta.', 'Escreveram o livro juntos.'], answer: 'São apaixonados pela filosofia Ioruba.', explanation: 'A resposta correta é que são apaixonados pela filosofia Ioruba.' },
+            { question: 'Qual foi um dos últimos trabalhos de Rodrigo França mencionados no livro?', options: ['"O Rei Solitário".', '"A Raposa e o Príncipe".', '"Oboró: Masculinidades Negras".', '"As Crianças de Ubuntu".'], answer: '"Oboró: Masculinidades Negras".', explanation: 'A resposta correta é "Oboró: Masculinidades Negras".' },
+            { question: 'Qual foi o sentimento principal da ilustradora ao trabalhar no livro?', options: ['Foi um processo difícil e estressante.', 'Foi um processo indiferente.', 'Foi um processo leve, gostoso e muito importante.', 'Foi um processo rápido e sem importância.'], answer: 'Foi um processo leve, gostoso e muito importante.', explanation: 'A resposta correta é que foi um processo leve, gostoso e muito importante.' },
+            { question: 'Como o rei se descreve?', options: ['Como o mais humilde e simples.', 'Como o mais belo, simpático e rico.', 'Como o mais triste e solitário.', 'Como o mais forte e corajoso.'], answer: 'Como o mais belo, simpático e rico.', explanation: 'A resposta correta é como o mais belo, simpático e rico.' },
+            { question: 'O que a raposa diz que faz a vida dela ser chata?', options: ['O fato de não ter amigos.', 'A rotina de caçar galinhas e ser caçada por homens.', 'O excesso de sol.', 'A falta de comida.'], answer: 'A rotina de caçar galinhas e ser caçada por homens.', explanation: 'A resposta correta é a rotina de caçar galinhas e ser caçada por homens.' },
+            { question: 'A frase "Eu sou porque nós somos" é o significado de qual palavra?', options: ['Modupé', 'Ancestralidade', 'Orun', 'Ubuntu'], answer: 'Ubuntu', explanation: 'A resposta correta é Ubuntu.' },
+            { question: 'O Pequeno Príncipe diz que não é dono de nada, nem mesmo:', options: ['De suas roupas.', 'De sua pipa.', 'Da árvore Baobá.', 'De suas sementes.'], answer: 'Da árvore Baobá.', explanation: 'A resposta correta é da árvore Baobá.' },
+            { question: 'Qual a cor dos olhos do Pequeno Príncipe Preto?', options: ['Verdes como as folhas.', 'Azuis como o céu.', 'Claros como o dia.', 'Escuros como a noite.'], answer: 'Escuros como a noite.', explanation: 'A resposta correta é escuros como a noite.' },
+            { question: 'O que acontece quando as espadas de Iansã e Xangô se tocam?', options: ['Começa a chover.', 'O dia vira noite.', 'Faz um grande barulho de explosão (trovão).', 'As estrelas caem do céu.'], answer: 'Faz um grande barulho de explosão (trovão).', explanation: 'A resposta correta é que faz um grande barulho de explosão (trovão).' },
+            { question: 'O que o Pequeno Príncipe percebeu sobre o Planeta Terra assim que chegou?', options: ['Que ele era minúsculo.', 'Que ele era desabitado.', 'Que ele era grande e o fez andar muito.', 'Que ele era todo coberto de gelo.'], answer: 'Que ele era grande e o fez andar muito.', explanation: 'A resposta correta é que ele era grande e o fez andar muito.' },
+            { question: 'O que a raposa diz que acontecerá com ela quanto mais perto da hora da chegada do Príncipe?', options: ['Mais sono ela sentirá.', 'Mais fome ela terá.', 'Mais feliz ela se sentirá.', 'Mais medo ela terá.'], answer: 'Mais feliz ela se sentirá.', explanation: 'A resposta correta é que mais feliz ela se sentirá.' },
+            { question: 'Os adultos na Terra pareciam não ter:', options: ['Trabalho.', 'Família.', 'Sonhos.', 'Comida.'], answer: 'Sonhos.', explanation: 'A resposta correta é sonhos.' },
+            { question: 'Qual a comida preferida do Pequeno Príncipe mencionada além de goiabada com queijo?', options: ['Pizza e lasanha.', 'Frango à passarinho.', 'Arroz-doce e pé de moleque.', 'Caruru e quindim.'], answer: 'Caruru e quindim.', explanation: 'A resposta correta é Caruru e quindim.' },
+            { question: 'O que o Príncipe plantou em cada planeta que visitou?', options: ['Uma flor.', 'Uma semente de Baobá.', 'Uma bandeira de seu planeta.', 'Uma estátua de si mesmo.'], answer: 'Uma semente de Baobá.', explanation: 'A resposta correta é uma semente de Baobá.' },
+            { question: 'O que a Baobá disse que viria depois dela?', options: ['Uma grande estrela.', 'Outra árvore.', 'Uma flor gigante.', 'Um rio.'], answer: 'Outra árvore.', explanation: 'A resposta correta é outra árvore.' },
+            { question: 'De acordo com o posfácio, a peça "O Pequeno Príncipe Preto" teve a intenção de mostrar às crianças que:', options: ['Elas devem ser todas iguais.', 'Elas são potentes na diversidade cultural.', 'Viajar é a coisa mais importante.', 'É preciso ter medo do mundo.'], answer: 'Elas são potentes na diversidade cultural.', explanation: 'A resposta correta é que elas são potentes na diversidade cultural.' },
+            { question: 'O que significa "Modupé"?', options: ['Olá.', 'Adeus.', 'Por favor.', 'Obrigado.'], answer: 'Obrigado.', explanation: 'A resposta correta é Obrigado.' },
+            { question: 'O que o Príncipe diz que será o limite para o crescimento do seu cabelo?', options: ['O chão.', 'O ombro.', 'O céu.', 'A coroa.'], answer: 'O céu.', explanation: 'A resposta correta é o céu.' },
+            { question: 'O que o rei faz para tentar convencer o Pequeno Príncipe a ficar, depois de oferecer um cargo?', options: ['Oferece estrelas.', 'Oferece cocadas, balas e bolo.', 'Oferece seu manto vermelho.', 'Oferece sua coroa.'], answer: 'Oferece cocadas, balas e bolo.', explanation: 'A resposta correta é que oferece cocadas, balas e bolo.' },
+            { question: 'O Pequeno Príncipe diz que queria ficar na Terra tempo suficiente para:', options: ['Aprender a falar como as crianças de lá.', 'Virar amigo da raposa.', 'Construir uma casa.', 'Comer todas as comidas diferentes.'], answer: 'Virar amigo da raposa.', explanation: 'A resposta correta é virar amigo da raposa.' },
+            { question: 'Qual foi a primeira reação de algumas crianças ao sotaque e roupas do Príncipe?', options: ['Curiosidade.', 'Silêncio.', 'Riram dele.', 'Elogiaram.'], answer: 'Riram dele.', explanation: 'A resposta correta é que riram dele.' },
+            { question: 'O que o Príncipe precisou fazer para subir na Baobá e pegar a pipa?', options: ['Usar uma escada.', 'Pedir licença à árvore.', 'Dar um pulo muito alto.', 'Chamar um pássaro para ajudá-lo.'], answer: 'Pedir licença à árvore.', explanation: 'A resposta correta é pedir licença à árvore.' },
+            { question: 'O que o Pequeno Príncipe sente ao se despedir dos seus novos amigos da Terra?', options: ['Alívio.', 'Raiva.', 'Saudade.', 'Indiferença.'], answer: 'Saudade.', explanation: 'A resposta correta é Saudade.' },
+            { question: 'A Baobá disse ao Príncipe que ele era o Pequeno Príncipe. E ela, quem era?', options: ['A Rainha Mãe.', 'A Árvore Sábia.', 'A Grande Princesa.', 'A Guardiã do Planeta.'], answer: 'A Grande Princesa.', explanation: 'A resposta correta é A Grande Princesa.' },
+            { question: 'Quantas pessoas cabiam no planeta do Pequeno Príncipe Preto no início da história?', options: ['Apenas uma.', 'Duas: ele e a Baobá.', 'Três: ele, a Baobá e a raposa.', 'Muitas pessoas.'], answer: 'Duas: ele e a Baobá.', explanation: 'A resposta correta são duas: ele e a Baobá.' },
+            { question: 'Qual a principal lição que a raposa ensina sobre os sentimentos?', options: ['Que devemos esconder o que sentimos.', 'Que devemos ser sempre sinceros com nossos sentimentos.', 'Que sentir é uma fraqueza.', 'Que apenas as raposas sentem de verdade.'], answer: 'Que devemos ser sempre sinceros com nossos sentimentos.', explanation: 'A resposta correta é que devemos ser sempre sinceros com nossos sentimentos.' },
+            { question: 'Qual é a última palavra do livro, dita pelo Pequeno Príncipe ao pensar em sua próxima viagem?', options: ['"Adeus!"', '"Saudade!"', '"Amizade!"', '"UBUNTU!"'], answer: '"UBUNTU!"', explanation: 'A resposta correta é "UBUNTU!".' }
+        ];
+
+        // --- FUNÇÕES GERAIS E DE TELA ---
+        function showScreen(screenToShow) {
+            document.querySelectorAll('.screen').forEach(screen => screen.classList.add('hidden'));
+            screenToShow.classList.remove('hidden');
+        }
+
+        function toggleButtonLoader(button, show) {
+            const buttonText = button.querySelector('.button-text');
+            const loader = button.querySelector('.loader');
+            if (buttonText && loader) {
+                buttonText.style.display = show ? 'none' : 'inline';
+                loader.style.display = show ? 'inline-block' : 'none';
+            }
+            button.disabled = show;
+        }
+
+        async function callAppsScript(action, data) {
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    redirect: 'follow',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8', },
+                    body: JSON.stringify({ action, ...data })
+                });
+                if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
+                return await response.json();
+            } catch (error) {
+                console.error("Erro ao contatar o Apps Script:", error);
+                return { status: 'error', message: 'Falha de comunicação. Verifique a publicação do script e sua conexão.' };
+            }
+        }
+        
+        function capitalizeName(name) {
+            return name.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        }
+
+        function handleSuccessfulLogin(userData) {
+            const firstName = userData.name.split(' ')[0];
+            loggedInUser = { ...userData, firstName };
+            sessionStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+            playerFirstNameEl.textContent = firstName;
+            showScreen(gameScreen);
+            startGame();
+        }
+
+        // --- LÓGICA DE LOGIN E CADASTRO ---
+        loginButton.addEventListener('click', async () => {
+            const code = loginCodeInput.value.trim();
+            const password = loginPasswordInput.value.trim();
+            loginMessage.textContent = '';
+            if (!code || !password) {
+                loginMessage.textContent = 'Preencha o código e a senha.';
+                return;
+            }
+            toggleButtonLoader(loginButton, true);
+            const result = await callAppsScript('login', { code, password });
+            toggleButtonLoader(loginButton, false);
+            if (result.status === 'success') {
+                handleSuccessfulLogin({ name: result.name, code: code, turma: result.turma });
+            } else if (result.status === 'not_found') {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                registerCodeInput.value = code;
+                registerCodeInput.removeAttribute('readonly');
+            } else {
+                loginMessage.textContent = result.message || 'Ocorreu um erro.';
+            }
+        });
+        
+        goToRegisterButton.addEventListener('click', () => {
+            loginForm.classList.add('hidden');
+            registerForm.classList.remove('hidden');
+            loginMessage.textContent = '';
+            registerCodeInput.removeAttribute('readonly');
+            registerCodeInput.value = '';
+        });
+
+        registerButton.addEventListener('click', async () => {
+            const rawName = registerNameInput.value.trim();
+            const turma = registerClassInput.value;
+            const code = registerCodeInput.value.trim();
+            const password = registerPasswordInput.value.trim();
+            registerMessage.textContent = '';
+            if (!rawName || !turma || !code || !password) {
+                registerMessage.textContent = 'Todos os campos são obrigatórios.';
+                return;
+            }
+            const name = capitalizeName(rawName);
+            toggleButtonLoader(registerButton, true);
+            const data = { name, turma, code, password };
+            const result = await callAppsScript('register', data);
+            toggleButtonLoader(registerButton, false);
+            if (result.status === 'success') {
+                handleSuccessfulLogin({ name: name, code: code, turma: turma });
+            } else {
+                registerMessage.textContent = result.message || 'Ocorreu um erro.';
+            }
+        });
+
+        backToLoginButton.addEventListener('click', () => {
+            registerForm.classList.add('hidden');
+            loginForm.classList.remove('hidden');
+            registerMessage.textContent = '';
+        });
+
+        loginPasswordInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') loginButton.click(); });
+        loginCodeInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') loginButton.click(); });
+        registerPasswordInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') registerButton.click(); });
+        registerCodeInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') registerButton.click(); });
+        registerNameInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') registerButton.click(); });
+
+        window.addEventListener('load', () => {
+            const user = sessionStorage.getItem('loggedInUser');
+            if (user) {
+                loggedInUser = JSON.parse(user);
+                playerFirstNameEl.textContent = loggedInUser.firstName;
+                showScreen(gameScreen);
+                startGame();
+            } else {
+                showScreen(loginScreen);
+            }
+        });
+        
+        // --- LÓGICA DO QUIZ ---
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function updateScoreDisplay() {
+            document.querySelectorAll('.score-display').forEach(el => el.textContent = score);
+        }
+
+        function startGame() {
+            score = 0;
+            currentQuestionIndex = 0;
+            shuffledQuestions = shuffleArray([...questions]).slice(0, 25); // Pega 25 questões aleatórias
+            startTime = new Date();
+            updateScoreDisplay();
+            displayNextQuestion();
+        }
+
+        function displayNextQuestion() {
+            if (currentQuestionIndex >= shuffledQuestions.length) {
+                endGame();
+                return;
+            }
+            const currentQuestion = shuffledQuestions[currentQuestionIndex];
+            questionContainer.textContent = currentQuestion.question;
+            optionsContainer.innerHTML = '';
+
+            const shuffledOptions = shuffleArray([...currentQuestion.options]);
+
+            shuffledOptions.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('option-button', 'w-full', 'bg-white', 'text-sky-700', 'text-lg', 'sm:text-xl', 'font-bold', 'py-4', 'px-2', 'rounded-xl', 'shadow-lg', 'border-b-8', 'border-sky-300', 'hover:border-sky-400');
+                button.addEventListener('click', handleAnswer);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function handleAnswer(e) {
+            const selectedOption = e.target.textContent;
+            const currentQuestion = shuffledQuestions[currentQuestionIndex];
+            const correctAnswer = currentQuestion.answer;
+            const explanation = currentQuestion.explanation;
+
+            optionsContainer.querySelectorAll('button').forEach(btn => btn.disabled = true);
+
+            if (selectedOption === correctAnswer) {
+                score++;
+                showFeedback(`Correto! +1 Ponto! 🎉`, explanation, true);
+                e.target.classList.remove('bg-white', 'border-sky-300');
+                e.target.classList.add('bg-green-400', 'border-green-600', 'text-white');
+            } else {
+                const wrongFeedbackMsg = `Ops! A resposta certa é "${correctAnswer}".`;
+                showFeedback(wrongFeedbackMsg, explanation, false);
+                e.target.classList.remove('bg-white', 'border-sky-300');
+                e.target.classList.add('bg-red-400', 'border-red-600', 'text-white');
+            }
+            
+            updateScoreDisplay();
+        }
+
+        function showFeedback(message, explanation, isCorrect) {
+            feedbackEl.innerHTML = `
+                <strong class="block text-3xl">${message}</strong>
+                <span class="text-xl mt-2 block">${explanation}</span>
+                <button id="continue-feedback-btn" class="mt-4 bg-white text-sky-800 text-xl font-bold py-2 px-8 rounded-xl shadow-md hover:bg-gray-200 transition">Continuar</button>
+            `;
+            feedbackEl.className = `fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 sm:p-8 rounded-2xl text-white font-bold shadow-2xl opacity-0 w-11/12 max-w-sm text-center ${isCorrect ? 'bg-green-500' : 'bg-red-500'}`;
+            
+            feedbackEl.classList.remove('opacity-0', 'pointer-events-none');
+            feedbackEl.style.transform = 'translate(-50%, -50%) scale(1)';
+
+            document.getElementById('continue-feedback-btn').addEventListener('click', () => {
+                feedbackEl.style.transform = 'translate(-50%, -50%) scale(0.5)';
+                feedbackEl.classList.add('opacity-0', 'pointer-events-none');
+                
+                currentQuestionIndex++;
+                if (currentQuestionIndex >= shuffledQuestions.length) {
+                    endGame();
+                } else {
+                    displayNextQuestion();
+                }
+            }, { once: true });
+        }
+        
+        function getMotivationalMessage(finalScore) {
+            if (finalScore >= 16) {
+                return "Excelente, " + loggedInUser.firstName + "! Você domina a história! 🏆";
+            } else if (finalScore >= 10) {
+                return "Muito bem, " + loggedInUser.firstName + "! Continue praticando para ficar ainda melhor. 👍";
+            } else {
+                return "Não desista, " + loggedInUser.firstName + "! Cada tentativa é um passo para aprender mais. ✨";
+            }
+        }
+        
+        // --- LÓGICA DE FIM DE JOGO E RANKING ---
+        function resetGame() {
+            score = 0;
+            currentQuestionIndex = 0;
+            startTime = null;
+            showScreen(gameScreen);
+            startGame();
+        }
+
+        async function endGame() {
+            const endTime = new Date();
+            const timeSpent = Math.round((endTime - startTime) / 1000);
+            
+            showScreen(endScreen);
+            endScreenContent.classList.remove('hidden');
+            playAgainButton.classList.remove('hidden');
+            backFromRankingButton.classList.add('hidden');
+            document.getElementById('final-score').textContent = score;
+            finalMessageEl.textContent = getMotivationalMessage(score);
+            
+            const result = await callAppsScript('saveScoreAndGetRanking', { 
+                fullName: loggedInUser.name, 
+                turma: loggedInUser.turma, 
+                score: score, 
+                time: timeSpent,
+                nomeDoJogo: NOME_DESTE_JOGO,
+                code: loggedInUser.code
+            });
+            
+            if (result.status === 'success') {
+                populateRankingTable(result.ranking);
+            } else {
+                document.getElementById('ranking-body').innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">${result.message}</td></tr>`;
+            }
+        }
+        
+        async function displayRanking() {
+            showScreen(endScreen);
+            endScreenContent.classList.add('hidden');
+            playAgainButton.classList.add('hidden');
+            backFromRankingButton.classList.remove('hidden');
+
+            const result = await callAppsScript('getRanking', { nomeDoJogo: NOME_DESTE_JOGO });
+            if (result.status === 'success') {
+                populateRankingTable(result.ranking);
+            } else {
+                document.getElementById('ranking-body').innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">${result.message}</td></tr>`;
+            }
+        }
+
+        viewRankingButton.addEventListener('click', displayRanking);
+        
+        backFromRankingButton.addEventListener('click', () => {
+            showScreen(loginScreen);
+        });
+
+        function populateRankingTable(ranking) {
+            const tbody = document.getElementById('ranking-body');
+            tbody.innerHTML = '';
+            if(ranking.length === 0){
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center">Ainda não há pontuações. Seja o primeiro!</td></tr>`;
+                return;
+            }
+            ranking.forEach((entry, index) => {
+                const isCurrentUser = loggedInUser && entry.code === loggedInUser.code;
+                const row = `
+                    <tr class="border-b border-sky-100 ${isCurrentUser ? 'bg-yellow-200' : ''}">
+                        <td class="p-2 font-bold">${index + 1}</td>
+                        <td class="p-2">${entry.name}</td>
+                        <td class="p-2">${entry.score}</td>
+                        <td class="p-2">${entry.turma}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        playAgainButton.addEventListener('click', resetGame);
+
+    </script>
+</body>
+</html>
+
+
